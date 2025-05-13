@@ -76,6 +76,8 @@ static void forceResetAllUIElements(void) {
 	UIWindow *window = getKeyWindow();
 	if (!window)
 		return;
+	// 恢复透明度
+	CGFloat alpha = DYYYGetGlobalAlpha();
 	for (NSString *className in targetClassNames) {
 		Class viewClass = NSClassFromString(className);
 		if (!viewClass)
@@ -83,7 +85,7 @@ static void forceResetAllUIElements(void) {
 		NSMutableArray *views = [NSMutableArray array];
 		findViewsOfClassHelper(window, viewClass, views);
 		for (UIView *view in views) {
-			view.alpha = 1.0;
+			view.alpha = alpha;
 		}
 	}
 }
@@ -315,11 +317,7 @@ static void initTargetClassNames(void) {
 		if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYEnabshijianjindu"]) {
 			// 如果设置了移除时间进度条，直接显示
 			view.hidden = NO;
-		} else {
-			CGFloat alphaValue = DYYYGetGlobalAlpha();
-			// 恢复透明度
-    		view.alpha = alphaValue; 
-		}
+		} 
         return;
     }
 
