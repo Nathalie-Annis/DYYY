@@ -64,6 +64,14 @@ static UIWindow *getKeyWindow(void) {
 	}
 	return keyWindow;
 }
+// 读取偏好设置里的透明度用于清屏后恢复
+static CGFloat DYYYGetGlobalAlpha(void) {
+    NSString *value = [[NSUserDefaults standardUserDefaults] stringForKey:@"DYYYGlobalTransparency"];
+    if (value.length == 0)  return 1.0;
+    CGFloat alpha = value.floatValue;
+    if (alpha < 0.0f || alpha > 1.0f)  return 1.0;
+    return alpha;
+}
 static void forceResetAllUIElements(void) {
 	UIWindow *window = getKeyWindow();
 	if (!window)
@@ -84,14 +92,6 @@ static void reapplyHidingToAllElements(HideUIButton *button) {
 	if (!button || !button.isElementsHidden)
 		return;
 	[button hideUIElements];
-}
-// 读取偏好设置里的透明度用于清屏后恢复
-static CGFloat DYYYGetGlobalAlpha(void) {
-    NSString *value = [[NSUserDefaults standardUserDefaults] stringForKey:@"DYYYGlobalTransparency"];
-    if (value.length == 0)  return 1.0;
-    CGFloat alpha = value.floatValue;
-    if (alpha < 0.0f || alpha > 1.0f)  return 1.0;
-    return alpha;
 }
 static void initTargetClassNames(void) {
     NSMutableArray<NSString *> *list = [@[
