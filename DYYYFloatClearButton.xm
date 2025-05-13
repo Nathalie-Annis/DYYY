@@ -76,7 +76,6 @@ static void forceResetAllUIElements(void) {
 	UIWindow *window = getKeyWindow();
 	if (!window)
 		return;
-	CGFloat alphaValue = DYYYGetGlobalAlpha();
 	for (NSString *className in targetClassNames) {
 		Class viewClass = NSClassFromString(className);
 		if (!viewClass)
@@ -84,7 +83,7 @@ static void forceResetAllUIElements(void) {
 		NSMutableArray *views = [NSMutableArray array];
 		findViewsOfClassHelper(window, viewClass, views);
 		for (UIView *view in views) {
-			view.alpha = alphaValue;
+			view.alpha = 1.0;
 		}
 	}
 }
