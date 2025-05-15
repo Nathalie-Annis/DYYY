@@ -64,10 +64,18 @@ static UIWindow *getKeyWindow(void) {
 	}
 	return keyWindow;
 }
+static CGFloat DYYYGetGlobalAlpha(void) {
+    NSString *value = [[NSUserDefaults standardUserDefaults] stringForKey:@"DYYYGlobalTransparency"];
+    if (value.length == 0)  return 1.0;
+    CGFloat alpha = value.floatValue;
+    if (alpha < 0.011 || alpha > 1.0)  return 1.0; 
+    return alpha;
+}
 static void forceResetAllUIElements(void) {
 	UIWindow *window = getKeyWindow();
 	if (!window)
 		return;
+	CGFloat alphaValue = DYYYGetGlobalAlpha();
 	for (NSString *className in targetClassNames) {
 		Class viewClass = NSClassFromString(className);
 		if (!viewClass)
@@ -75,7 +83,8 @@ static void forceResetAllUIElements(void) {
 		NSMutableArray *views = [NSMutableArray array];
 		findViewsOfClassHelper(window, viewClass, views);
 		for (UIView *view in views) {
-			view.alpha = 1.0;
+			view.tag = DYYY_IGNORE_GLOBAL_ALPHA_TAG;
+			view.alpha = alphaValue;
 		}
 	}
 }
@@ -313,7 +322,8 @@ static void initTargetClassNames(void) {
 			view.hidden = NO;
 		} else {
 			// 恢复透明度
-    		view.alpha = 1.0; 
+			CGFloat alphaValue = DYYYGetGlobalAlpha();
+    		view.alpha = alphaValue; 
 		}
         return;
     }

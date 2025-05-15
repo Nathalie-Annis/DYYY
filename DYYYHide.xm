@@ -59,6 +59,7 @@
 	if (transparencyValue && transparencyValue.length > 0) {
 		CGFloat alphaValue = [transparencyValue floatValue];
 		if (alphaValue >= 0.0 && alphaValue <= 1.0) {
+			self.tag = DYYY_IGNORE_GLOBAL_ALPHA_TAG;
 			self.alpha = alphaValue;
 		}
 	}
