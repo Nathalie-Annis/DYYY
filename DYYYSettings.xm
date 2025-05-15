@@ -2369,6 +2369,14 @@ static void showUserAgreementAlert() {
 			      @"cellType" : @6,
 			      @"imageName" : @"ic_eyeslash_outlined_16"}];
 		    [clearButtonItems addObject:hideTabButton];
+			AWESettingItemModel *hideSpeedButton = [self
+			createSettingItem:
+			    @{@"identifier" : @"DYYYHideSpeed",
+			      @"title" : @"清屏隐藏倍速",
+			      @"detail" : @"",
+			      @"cellType" : @6,
+			      @"imageName" : @"ic_eyeslash_outlined_16"}];
+		    [clearButtonItems addObject:hideSpeedButton];
 		    // 获取清屏按钮的当前开关状态
 		    BOOL isEnabled = getUserDefaults(@"DYYYEnableFloatClearButton");
 		    // 更新清屏按钮大小和图标设置项的启用状态

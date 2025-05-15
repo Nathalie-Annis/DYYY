@@ -36,6 +36,7 @@
 	if (transparencyValue && transparencyValue.length > 0) {
 		CGFloat alphaValue = [transparencyValue floatValue];
 		if (alphaValue >= 0.0 && alphaValue <= 1.0) {
+			self.tag = DYYY_IGNORE_GLOBAL_ALPHA_TAG;
 			self.alpha = alphaValue;
 		}
 	}
@@ -1205,10 +1206,7 @@
     %orig;
 
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideDiscover"]) {
-        UIView *firstSubview = self.subviews.firstObject;
-        if ([firstSubview isKindOfClass:[UIImageView class]]) {
-            ((UIImageView *)firstSubview).image = nil;
-        }
+        self.alpha = 0.011;
     }
 }
 
