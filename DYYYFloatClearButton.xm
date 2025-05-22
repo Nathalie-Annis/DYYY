@@ -76,7 +76,7 @@ static void forceResetAllUIElements(void) {
 		NSMutableArray *views = [NSMutableArray array];
 		findViewsOfClassHelper(window, viewClass, views);
 		for (UIView *view in views) {
-			view.alpha = 1.0;
+			view.alpha = 0.8;
 		}
 	}
 }
@@ -324,7 +324,7 @@ static void initTargetClassNames(void) {
 			view.hidden = NO;
 		} else {
 			// 恢复透明度
-    		view.alpha = 1.0; 
+    		view.alpha = 0.8; 
 		}
         return;
     }
