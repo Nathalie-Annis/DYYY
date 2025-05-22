@@ -324,7 +324,7 @@ static void initTargetClassNames(void) {
 			view.hidden = NO;
 		} else {
 			// 恢复透明度
-    		view.alpha = 0.8; 
+    		view.alpha = 0.8;  
 		}
         return;
     }
