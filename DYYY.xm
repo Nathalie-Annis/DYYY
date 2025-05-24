@@ -1978,6 +1978,7 @@ static CGFloat rightLabelRightMargin = -1;
 }
 %end
 
+%end
 
 %hook AWEPlayInteractionSpeedController
 
