@@ -1978,12 +1978,19 @@ static CGFloat rightLabelRightMargin = -1;
 }
 %end
 
-%end
 
 %hook AWEPlayInteractionSpeedController
 
 - (CGFloat)longPressFastSpeedValue {
-	return 3.0;
+	NSString *speedValue = [[NSUserDefaults standardUserDefaults] objectForKey:@"DYYYLongPressSpeed"];
+	CGFloat speed = 2.0;
+	if (speedValue.length > 0) {
+		CGFloat customSpeed = [speedValue floatValue];
+		if (customSpeed >= 0.1 && customSpeed <= 16.0) {
+			speed = customSpeed;
+		}
+	}
+	return speed;
 }
 
 %end
@@ -1991,13 +1998,24 @@ static CGFloat rightLabelRightMargin = -1;
 %hook UILabel
 
 - (void)setText:(NSString *)text {
-    UIView *superview = self.superview;
-    
-    if ([superview isKindOfClass:%c(AFDFastSpeedView)] && text && [text containsString:@"2"]) {
-        text = [text stringByReplacingOccurrencesOfString:@"2" withString:@"3"];
-    }
-    
-    %orig(text);
+	UIView *superview = self.superview;
+	if ([superview isKindOfClass:%c(AFDFastSpeedView)] && text && [text containsString:@"2"]) {
+		NSString *speedValue = [[NSUserDefaults standardUserDefaults] objectForKey:@"DYYYLongPressSpeed"];
+		CGFloat speed = 2.0;
+		if (speedValue.length > 0) {
+			CGFloat customSpeed = [speedValue floatValue];
+			if (customSpeed >= 0.1 && customSpeed <= 16.0) {
+				speed = customSpeed;
+			}
+		}
+		if (floor(speed) == speed) {
+			speedString = [NSString stringWithFormat:@"%.0f", speed];
+		} else {
+			speedString = [NSString stringWithFormat:@"%.1f", speed];
+		}
+		text = [text stringByReplacingOccurrencesOfString:@"2" withString:speedString];
+	}
+	%orig(text);
 }
 
 %end
