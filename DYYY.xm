@@ -2009,6 +2009,7 @@ static CGFloat rightLabelRightMargin = -1;
 				speed = customSpeed;
 			}
 		}
+		NSString *speedString;
 		if (floor(speed) == speed) {
 			speedString = [NSString stringWithFormat:@"%.0f", speed];
 		} else {
