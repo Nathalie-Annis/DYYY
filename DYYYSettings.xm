@@ -590,7 +590,7 @@ void showDYYYSettingsVC(UIViewController *rootVC, BOOL hasAgreed) {
 		    @"title" : @"设置长按倍速",
 		    @"detail" : @"",
 		    @"cellType" : @26,
-		    @"imageName" : @"ic_speed_outlined_20"}
+		    @"imageName" : @"ic_speed_outlined_20"},
 		  @{@"identifier" : @"DYYYisEnableArea",
 		    @"title" : @"时间属地显示",
 		    @"detail" : @"",
