@@ -2495,7 +2495,7 @@ static AWEIMReusableCommonCell *currentCell;
 - (void)viewWillAppear:(BOOL)animated {
     %orig(animated);
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideCommentTips"]){
-        self.view.hidden = YES;
+        ((UIViewController *)self).view.hidden = YES;
     }
 }
 %end

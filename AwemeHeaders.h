@@ -161,8 +161,6 @@ typedef NS_ENUM(NSInteger, MediaType) {
 - (void)setNumericalRedDot:(id)numericalRedDot;
 - (void)setRedDot:(id)redDot;
 @end
-@interface AWECommentPanelListSwiftImpl_CommentBottomTipsContainerViewController : UIViewController
-@end
 
 @interface AWEDanmakuContentLabel : UILabel
 - (UIColor *)colorFromHexString:(NSString *)hexString baseColor:(UIColor *)baseColor;
