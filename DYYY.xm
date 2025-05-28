@@ -2492,13 +2492,11 @@ static AWEIMReusableCommonCell *currentCell;
 %end
 %group CommentBottomTipsVCGroup
 %hook AWECommentPanelListSwiftImpl_CommentBottomTipsContainerViewController
-- (void)viewDidLayoutSubviews {
-	%orig;
-
-	UIViewController *vc = (UIViewController *)self;
-	if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideCommentTips"]) {
-		[vc.view removeFromSuperview];
-	}
+- (void)viewWillAppear:(BOOL)animated {
+    %orig(animated);
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideCommentTips"]){
+        self.view.hidden = YES;
+    }
 }
 %end
 %end
