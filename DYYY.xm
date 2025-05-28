@@ -2495,8 +2495,9 @@ static AWEIMReusableCommonCell *currentCell;
 - (void)viewDidLayoutSubviews {
 	%orig;
 
+	UIViewController *vc = (UIViewController *)self;
 	if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideCommentTips"]) {
-		[self.view removeFromSuperview];
+		[vc.view removeFromSuperview];
 	}
 }
 %end
