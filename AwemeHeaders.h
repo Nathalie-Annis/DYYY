@@ -3,6 +3,7 @@
 
 #define DYYYGetBool(key) [[NSUserDefaults standardUserDefaults] boolForKey:key]
 #define DYYY_IGNORE_GLOBAL_ALPHA_TAG 114514
+static __weak UICollectionView *gFeedCV = nil;
 @interface AVSystemController : NSObject
 + (instancetype)sharedAVSystemController;
 - (BOOL)setVolumeTo:(float)value forCategory:(NSString *)cat;
