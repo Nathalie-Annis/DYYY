@@ -3,29 +3,36 @@
 
 #define DYYYGetBool(key) [[NSUserDefaults standardUserDefaults] boolForKey:key]
 #define DYYY_IGNORE_GLOBAL_ALPHA_TAG 114514
-typedef NS_ENUM(NSInteger, MediaType) {
-  MediaTypeVideo,
-  MediaTypeImage,
-  MediaTypeAudio,
-  MediaTypeHeic
-};
-@interface SBMediaController : NSObject
-+ (instancetype)sharedInstance;
-- (float)volume;                 // 0.0 ~ 1.0
-- (void)setVolume:(float)level;
+@interface AVSystemController : NSObject
++ (instancetype)sharedAVSystemController;
+- (BOOL)setVolumeTo:(float)value forCategory:(NSString *)cat;
+- (float)volumeForCategory:(NSString *)cat;
 @end
 
-// —— ② 调节模式枚举 ——
+// ============ 亮度 HUD ============ //
+@interface SBHUDController : NSObject
++ (instancetype)sharedInstance;
+- (void)presentHUDWithIcon:(NSString *)name level:(float)level;
+@end
+
+/* ❷ 如果 MediaType 枚举在别的文件没用到，可删 */
+typedef NS_ENUM(NSInteger, MediaType) {
+    MediaTypeVideo,
+    MediaTypeImage,
+    MediaTypeAudio,
+    MediaTypeHeic
+};
+
+// ============ 调节模式枚举 & 全局状态 ============ //
 typedef NS_ENUM(NSUInteger, DYEdgeMode) {
     DYEdgeModeNone       = 0,
     DYEdgeModeBrightness = 1,
     DYEdgeModeVolume     = 2,
 };
 
-// —— ③ 持久化变量（这几个放在函数外，所有手势共用） ——
-static DYEdgeMode gMode      = DYEdgeModeNone;   // 当前所处模式
-static CGFloat    gStartY    = 0.0;              // 手指按下时的 Y
-static CGFloat    gStartVal  = 0.0;              // 初始亮度/音量
+static DYEdgeMode gMode   = DYEdgeModeNone;
+static CGFloat    gStartY = 0.0;
+static CGFloat    gStartVal = 0.0;
 @interface URLModel : NSObject
 @property(nonatomic, strong) NSArray *originURLList;
 @end

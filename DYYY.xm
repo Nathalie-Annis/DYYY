@@ -16,7 +16,6 @@
 #import "DYYYConstants.h"
 #import "DYYYToast.h"
 
-static __weak UICollectionView *gFeedCV = nil;
 
 %hook AWEFeedChannelManager
 
@@ -111,69 +110,76 @@ static __weak UICollectionView *gFeedCV = nil;
 
 %hook UICollectionView
 
+// 拦截手指拖动
 - (void)handlePan:(UIPanGestureRecognizer *)pan {
 
-    // ===== 0. 仅处理目标 Feed 列表，其余走系统逻辑 =====
+    /* 0️⃣ 仅处理目标 Feed 列表。其余 collectionView 直接走系统逻辑 */
     if (self != gFeedCV) {
         %orig;
         return;
     }
 
-    // ===== 1. 计算触点位置 & 手势状态 =====
+    /* 1️⃣ 取触点坐标、手势状态 */
     CGPoint loc   = [pan locationInView:self];
     CGFloat w     = self.bounds.size.width;
-    CGFloat xPct  = loc.x / w;                       // 0.0 ~ 1.0 (横屏时同理)
-    UIGestureRecognizerState state = pan.state;
+    CGFloat xPct  = loc.x / w;                          // 0.0 ~ 1.0
+    UIGestureRecognizerState st = pan.state;
 
-    // ===== 2. 根据状态机处理 =====
-    if (state == UIGestureRecognizerStateBegan) {
+    /* 2️⃣ BEGAN：判定左右 20 % 区域 → 进入亮度 / 音量模式 */
+    if (st == UIGestureRecognizerStateBegan) {
 
         gStartY = loc.y;
 
-        if (xPct <= 0.20) {                          // 左 20 % → 亮度
+        if (xPct <= 0.20) {                             // 左边缘 → 亮度
             gMode     = DYEdgeModeBrightness;
             gStartVal = [UIScreen mainScreen].brightness;
 
-        } else if (xPct >= 0.80) {                   // 右 20 % → 音量
+        } else if (xPct >= 0.80) {                      // 右边缘 → 音量
             gMode     = DYEdgeModeVolume;
-            gStartVal = [[%c(SBMediaController) sharedInstance] volume];
+            gStartVal = [[objc_getClass("AVSystemController") sharedAVSystemController]
+                          volumeForCategory:@"Audio/Video"];
 
         } else {
-            gMode = DYEdgeModeNone;                  // 中间区域
+            gMode = DYEdgeModeNone;                     // 中间区域走原逻辑
         }
     }
 
-    // ——（A）左右调节模式：拦截滚动，自己改值 ——
+    /* 3️⃣ 调节阶段：左右边缘时吞掉滚动、修改亮度/音量 */
     if (gMode != DYEdgeModeNone) {
 
-        if (state == UIGestureRecognizerStateChanged) {
+        if (st == UIGestureRecognizerStateChanged) {
 
-            // ΔY > 0 = 手指上滑
-            CGFloat delta   = (gStartY - loc.y) / self.bounds.size.height;
-            const  CGFloat kScale = 2.0;             // 调节灵敏度（拖满一屏改 ±2.0）
+            CGFloat delta   = (gStartY - loc.y) / self.bounds.size.height; // ↑ 为正
+            const  CGFloat kScale = 2.0;                 // 灵敏度
             float newVal   = gStartVal + delta * kScale;
-            newVal         = fminf(fmaxf(newVal, 0.0), 1.0);   // Clamp 0-1
+            newVal         = fminf(fmaxf(newVal, 0.0), 1.0);   // Clamp 0~1
 
             if (gMode == DYEdgeModeBrightness) {
                 [UIScreen mainScreen].brightness = newVal;
-            } else /* Volume */ {
-                [[%c(SBMediaController) sharedInstance] setVolume:newVal];
+                // 弹系统亮度 HUD
+                [[%c(SBHUDController) sharedInstance] presentHUDWithIcon:@"Brightness" level:newVal];
+
+            } else {                                    // DYEdgeModeVolume
+                // iOS 18 音量控制 + 系统音量 HUD
+                [[objc_getClass("AVSystemController") sharedAVSystemController]
+                    setVolumeTo:newVal forCategory:@"Audio/Video"];
             }
 
-            // 吞掉滚动：把已记录位移归零，防止内容跟着动
+            // 吞掉滚动：归零 translation，防止内容位移
             [pan setTranslation:CGPointZero inView:self];
         }
 
-        if (state == UIGestureRecognizerStateEnded  ||
-            state == UIGestureRecognizerStateCancelled ||
-            state == UIGestureRecognizerStateFailed) {
-            gMode = DYEdgeModeNone;                  // 复位
+        /* 4️⃣ 结束／取消：状态复位 */
+        if (st == UIGestureRecognizerStateEnded     ||
+            st == UIGestureRecognizerStateCancelled ||
+            st == UIGestureRecognizerStateFailed) {
+            gMode = DYEdgeModeNone;
         }
 
-        return;   // 不调 %orig；真正吞掉左右区域手势
+        return;    // ⚠️ 左右边缘：彻底阻断 %orig，避免翻页
     }
 
-    // ——（B）中间区域：完全走原逻辑 ——
+    /* 5️⃣ 中间区域：直接执行原先翻页逻辑 */
     %orig;
 }
 
