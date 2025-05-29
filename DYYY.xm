@@ -124,24 +124,29 @@
     UIGestureRecognizerState st = pan.state;
 
     /* 1️⃣ BEGAN：判断左右边缘 → 设置 gMode / gStartVal */
-    if (st == UIGestureRecognizerStateBegan) {
-        gStartY = loc.y;
+	if (st == UIGestureRecognizerStateBegan) {
+		gStartY = loc.y;
 
-        if (xPct <= 0.25) {                      // 左边缘 → 亮度模式
-            gMode     = DYEdgeModeBrightness;
-            gStartVal = [[objc_getClass("SBBacklightController") sharedInstance]
-                           respondsToSelector:@selector(backlightFactor)] ?
-                         [[objc_getClass("SBBacklightController") sharedInstance] backlightFactor] :
-                         [UIScreen mainScreen].brightness;
+		if (xPct <= 0.25) {                        // 左 25 % → 亮度模式
+			gMode = DYEdgeModeBrightness;
 
-        } else if (xPct >= 0.75) {               // 右边缘 → 音量模式
-            gMode     = DYEdgeModeVolume;
-            gStartVal = [[objc_getClass("AVSystemController") sharedAVSystemController]
-                          volumeForCategory:@"Audio/Video"];
-        } else {
-            gMode = DYEdgeModeNone;
-        }
-    }
+			// 先用 UIScreen 兜底
+			gStartVal = [UIScreen mainScreen].brightness;
+
+			// 若 SBBacklightController 能获取更精确值，再覆盖
+			id back = [objc_getClass("SBBacklightController") sharedInstance];
+			if (back && [back respondsToSelector:@selector(backlightFactor)]) {
+				gStartVal = [(SBBacklightController *)back backlightFactor];
+			}
+
+		} else if (xPct >= 0.75) {                 // 右 25 % → 音量模式
+			gMode = DYEdgeModeVolume;
+			gStartVal = [[objc_getClass("AVSystemController") sharedAVSystemController]
+						volumeForCategory:@"Audio/Video"];
+		} else {
+			gMode = DYEdgeModeNone;                // 中间区域
+		}
+	}
 
     /* 2️⃣ 调节阶段：左右边缘吞掉滚动，改亮度/音量 */
     if (gMode != DYEdgeModeNone) {

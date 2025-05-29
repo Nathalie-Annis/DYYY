@@ -13,10 +13,7 @@ static __weak UICollectionView *gFeedCV = nil;
 // ============ 亮度 HUD ============ //
 @interface SBBacklightController : NSObject
 + (instancetype)sharedInstance;
-/**
- * iOS 16~18：setBacklightFactor:source:               (factor 0~1)
- * iOS 15 及更早：setBacklightFactor:                  (没有 source 参数)
- */
+- (float)backlightFactor;                          // ← 补这行
 - (void)setBacklightFactor:(float)factor source:(int)source;
 - (void)setBacklightFactor:(float)factor;
 @end
