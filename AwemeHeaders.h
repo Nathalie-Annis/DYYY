@@ -10,17 +10,20 @@ typedef NS_ENUM(NSInteger, MediaType) {
     MediaTypeHeic
 };
 static __weak UICollectionView *gFeedCV = nil;
-/* 音量 —— iOS 18 仍可用 */
+// ============ iOS 18 音量控制 ============ //
 @interface AVSystemController : NSObject
 + (instancetype)sharedAVSystemController;
 - (BOOL)setVolumeTo:(float)value forCategory:(NSString *)cat;
 - (float)volumeForCategory:(NSString *)cat;
 @end
-/* SpringBoardServices — 亮度 */
-typedef void (*SBSSetBrightnessLevelWithFadeDuration_t)(float level, double fade);
-/* 动态查找一次即可缓存 */
-static SBSSetBrightnessLevelWithFadeDuration_t pSBSSetBrightnessLevelWithFadeDuration = NULL;
-/* 调节模式与全局状态 */
+
+// ============ 亮度 HUD ============ //
+@interface SBHUDController : NSObject
++ (instancetype)sharedInstance;
+- (void)presentHUDWithIcon:(NSString *)name level:(float)level;
+@end
+
+// ============ 调节模式枚举 & 全局状态 ============ //
 typedef NS_ENUM(NSUInteger, DYEdgeMode) {
     DYEdgeModeNone       = 0,
     DYEdgeModeBrightness = 1,

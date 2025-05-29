@@ -110,81 +110,82 @@
 
 %hook UICollectionView
 
+// 拦截手指拖动
 - (void)handlePan:(UIPanGestureRecognizer *)pan {
 
-    /* 0. 仅处理目标 Feed 列表 */
-    if (self != gFeedCV) { %orig; return; }
+    /* 0️⃣ 仅处理目标 Feed 列表。其余 collectionView 直接走系统逻辑 */
+    if (self != gFeedCV) {
+        %orig;
+        return;
+    }
 
-    CGPoint loc = [pan locationInView:self];
-    CGFloat w   = self.bounds.size.width;
-    CGFloat xPct = loc.x / w;
+    /* 1️⃣ 取触点坐标、手势状态 */
+    CGPoint loc   = [pan locationInView:self];
+    CGFloat w     = self.bounds.size.width;
+    CGFloat xPct  = loc.x / w;                          // 0.0 ~ 1.0
     UIGestureRecognizerState st = pan.state;
 
-    /* 1. BEGAN：判定左右 20 %，初始化起点值 */
+    /* 2️⃣ BEGAN：判定左右 20 % 区域 → 进入亮度 / 音量模式 */
     if (st == UIGestureRecognizerStateBegan) {
+
         gStartY = loc.y;
 
-        if (xPct <= 0.23) {                    // ← 亮度
-            gMode = DYEdgeModeBrightness;
+        if (xPct <= 0.20) {                             // 左边缘 → 亮度
+            gMode     = DYEdgeModeBrightness;
             gStartVal = [UIScreen mainScreen].brightness;
 
-        } else if (xPct >= 0.77) {             // → 音量
-            gMode = DYEdgeModeVolume;
-            gStartVal = [[%c(AVSystemController) sharedAVSystemController]
-                           volumeForCategory:@"Audio/Video"];
+        } else if (xPct >= 0.80) {                      // 右边缘 → 音量
+            gMode     = DYEdgeModeVolume;
+            gStartVal = [[objc_getClass("AVSystemController") sharedAVSystemController]
+                          volumeForCategory:@"Audio/Video"];
+
         } else {
-            gMode = DYEdgeModeNone;
+            gMode = DYEdgeModeNone;                     // 中间区域走原逻辑
         }
     }
 
-    /* 2. 调节阶段：左右边缘吞掉滚动，改亮度/音量 */
+    /* 3️⃣ 调节阶段：左右边缘时吞掉滚动、修改亮度/音量 */
     if (gMode != DYEdgeModeNone) {
 
         if (st == UIGestureRecognizerStateChanged) {
 
-            CGFloat delta = (gStartY - loc.y) / self.bounds.size.height; // ↑ 为正
-            const  CGFloat kScale = 2.0;
-            float newVal = fminf(fmaxf(gStartVal + delta * kScale, 0.0), 1.0);
+            CGFloat delta   = (gStartY - loc.y) / self.bounds.size.height; // ↑ 为正
+            const  CGFloat kScale = 2.0;                 // 灵敏度
+            float newVal   = gStartVal + delta * kScale;
+            newVal         = fminf(fmaxf(newVal, 0.0), 1.0);   // Clamp 0~1
 
             if (gMode == DYEdgeModeBrightness) {
+                [UIScreen mainScreen].brightness = newVal;
+                // 弹系统亮度 HUD
+                [[%c(SBHUDController) sharedInstance] presentHUDWithIcon:@"Brightness" level:newVal];
 
-                /* —— 亮度：调用 SpringBoardServices —— */
-                if (!pSBSSetBrightnessLevelWithFadeDuration) {
-                    pSBSSetBrightnessLevelWithFadeDuration =
-                        (SBSSetBrightnessLevelWithFadeDuration_t)
-                        dlsym(RTLD_DEFAULT,
-                              "SBSSetBrightnessLevelWithFadeDuration");
-                }
-                if (pSBSSetBrightnessLevelWithFadeDuration) {
-                    /* 第二个参数 = HUD 动画时长（秒）*/
-                    pSBSSetBrightnessLevelWithFadeDuration(newVal, 0.1);
-                } else {
-                    /* 极端兜底：改 UIScreen（无 HUD）*/
-                    [UIScreen mainScreen].brightness = newVal;
-                }
-
-            } else { /* 音量 */
-                [[%c(AVSystemController) sharedAVSystemController]
+            } else {                                    // DYEdgeModeVolume
+                // iOS 18 音量控制 + 系统音量 HUD
+                [[objc_getClass("AVSystemController") sharedAVSystemController]
                     setVolumeTo:newVal forCategory:@"Audio/Video"];
             }
 
-            /* 吞掉滚动位移 */
+            // 吞掉滚动：归零 translation，防止内容位移
             [pan setTranslation:CGPointZero inView:self];
         }
 
-        if (st == UIGestureRecognizerStateEnded ||
+        /* 4️⃣ 结束／取消：状态复位 */
+        if (st == UIGestureRecognizerStateEnded     ||
             st == UIGestureRecognizerStateCancelled ||
             st == UIGestureRecognizerStateFailed) {
             gMode = DYEdgeModeNone;
         }
-        return;                                // 阻断翻页
+
+        return;    // ⚠️ 左右边缘：彻底阻断 %orig，避免翻页
     }
 
-    /* 3. 中间区域：保持原翻页 */
+    /* 5️⃣ 中间区域：直接执行原先翻页逻辑 */
     %orig;
 }
 
 %end
+
+
 
 
 
