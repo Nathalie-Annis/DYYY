@@ -112,88 +112,80 @@
 
 - (void)handlePan:(UIPanGestureRecognizer *)pan {
 
-    /* 0️⃣ 只处理 gFeedCV */
-    if (self != gFeedCV) {
-        %orig;
-        return;
-    }
+    /* 0. 仅处理目标 Feed 列表 */
+    if (self != gFeedCV) { %orig; return; }
 
-    CGPoint loc  = [pan locationInView:self];
-    CGFloat w    = self.bounds.size.width;
+    CGPoint loc = [pan locationInView:self];
+    CGFloat w   = self.bounds.size.width;
     CGFloat xPct = loc.x / w;
     UIGestureRecognizerState st = pan.state;
 
-    /* 1️⃣ BEGAN：判断左右边缘 → 设置 gMode / gStartVal */
-	if (st == UIGestureRecognizerStateBegan) {
-		gStartY = loc.y;
+    /* 1. BEGAN：判定左右 20 %，初始化起点值 */
+    if (st == UIGestureRecognizerStateBegan) {
+        gStartY = loc.y;
 
-		if (xPct <= 0.25) {                        // 左 25 % → 亮度模式
-			gMode = DYEdgeModeBrightness;
+        if (xPct <= 0.23) {                    // ← 亮度
+            gMode = DYEdgeModeBrightness;
+            gStartVal = [UIScreen mainScreen].brightness;
 
-			// 先用 UIScreen 兜底
-			gStartVal = [UIScreen mainScreen].brightness;
+        } else if (xPct >= 0.77) {             // → 音量
+            gMode = DYEdgeModeVolume;
+            gStartVal = [[%c(AVSystemController) sharedAVSystemController]
+                           volumeForCategory:@"Audio/Video"];
+        } else {
+            gMode = DYEdgeModeNone;
+        }
+    }
 
-			// 若 SBBacklightController 能获取更精确值，再覆盖
-			id back = [objc_getClass("SBBacklightController") sharedInstance];
-			if (back && [back respondsToSelector:@selector(backlightFactor)]) {
-				gStartVal = [(SBBacklightController *)back backlightFactor];
-			}
-
-		} else if (xPct >= 0.75) {                 // 右 25 % → 音量模式
-			gMode = DYEdgeModeVolume;
-			gStartVal = [[objc_getClass("AVSystemController") sharedAVSystemController]
-						volumeForCategory:@"Audio/Video"];
-		} else {
-			gMode = DYEdgeModeNone;                // 中间区域
-		}
-	}
-
-    /* 2️⃣ 调节阶段：左右边缘吞掉滚动，改亮度/音量 */
+    /* 2. 调节阶段：左右边缘吞掉滚动，改亮度/音量 */
     if (gMode != DYEdgeModeNone) {
 
         if (st == UIGestureRecognizerStateChanged) {
 
-            CGFloat delta = (gStartY - loc.y) / self.bounds.size.height;   // ↑ 为正
-            const CGFloat kScale = 2.0;
-            float newVal = gStartVal + delta * kScale;
-            newVal       = fminf(fmaxf(newVal, 0.0), 1.0);
+            CGFloat delta = (gStartY - loc.y) / self.bounds.size.height; // ↑ 为正
+            const  CGFloat kScale = 2.0;
+            float newVal = fminf(fmaxf(gStartVal + delta * kScale, 0.0), 1.0);
 
             if (gMode == DYEdgeModeBrightness) {
 
-                /** 亮度：使用 SBBacklightController，系统会弹原生 HUD */
-                id back = [objc_getClass("SBBacklightController") sharedInstance];
-                if ([back respondsToSelector:@selector(setBacklightFactor:source:)]) {
-                    // source = 1 表示“手势来源”；随意填 1~3 都行
-                    [back setBacklightFactor:newVal source:1];
-                } else if ([back respondsToSelector:@selector(setBacklightFactor:)]) {
-                    [back setBacklightFactor:newVal];
+                /* —— 亮度：调用 SpringBoardServices —— */
+                if (!pSBSSetBrightnessLevelWithFadeDuration) {
+                    pSBSSetBrightnessLevelWithFadeDuration =
+                        (SBSSetBrightnessLevelWithFadeDuration_t)
+                        dlsym(RTLD_DEFAULT,
+                              "SBSSetBrightnessLevelWithFadeDuration");
+                }
+                if (pSBSSetBrightnessLevelWithFadeDuration) {
+                    /* 第二个参数 = HUD 动画时长（秒）*/
+                    pSBSSetBrightnessLevelWithFadeDuration(newVal, 0.1);
                 } else {
-                    // 极端兜底：仍旧直接改 UIScreen（无 HUD）
+                    /* 极端兜底：改 UIScreen（无 HUD）*/
                     [UIScreen mainScreen].brightness = newVal;
                 }
 
-            } else {   /* 音量：iOS 18 可用 */
-                [[objc_getClass("AVSystemController") sharedAVSystemController]
-                   setVolumeTo:newVal forCategory:@"Audio/Video"];
+            } else { /* 音量 */
+                [[%c(AVSystemController) sharedAVSystemController]
+                    setVolumeTo:newVal forCategory:@"Audio/Video"];
             }
 
-            /* 吞掉滚动 */
+            /* 吞掉滚动位移 */
             [pan setTranslation:CGPointZero inView:self];
         }
 
-        if (st == UIGestureRecognizerStateEnded  ||
+        if (st == UIGestureRecognizerStateEnded ||
             st == UIGestureRecognizerStateCancelled ||
             st == UIGestureRecognizerStateFailed) {
             gMode = DYEdgeModeNone;
         }
-        return;             // 阻断 %orig
+        return;                                // 阻断翻页
     }
 
-    /* 3️⃣ 中间区域：正常翻页 */
+    /* 3. 中间区域：保持原翻页 */
     %orig;
 }
 
 %end
+
 
 
 %hook AWEPlayInteractionUserAvatarElement

@@ -3,30 +3,24 @@
 
 #define DYYYGetBool(key) [[NSUserDefaults standardUserDefaults] boolForKey:key]
 #define DYYY_IGNORE_GLOBAL_ALPHA_TAG 114514
-static __weak UICollectionView *gFeedCV = nil;
-@interface AVSystemController : NSObject
-+ (instancetype)sharedAVSystemController;
-- (BOOL)setVolumeTo:(float)value forCategory:(NSString *)cat;
-- (float)volumeForCategory:(NSString *)cat;
-@end
-
-// ============ 亮度 HUD ============ //
-@interface SBBacklightController : NSObject
-+ (instancetype)sharedInstance;
-- (float)backlightFactor;                          // ← 补这行
-- (void)setBacklightFactor:(float)factor source:(int)source;
-- (void)setBacklightFactor:(float)factor;
-@end
-
-/* ❷ 如果 MediaType 枚举在别的文件没用到，可删 */
 typedef NS_ENUM(NSInteger, MediaType) {
     MediaTypeVideo,
     MediaTypeImage,
     MediaTypeAudio,
     MediaTypeHeic
 };
-
-// ============ 调节模式枚举 & 全局状态 ============ //
+static __weak UICollectionView *gFeedCV = nil;
+/* 音量 —— iOS 18 仍可用 */
+@interface AVSystemController : NSObject
++ (instancetype)sharedAVSystemController;
+- (BOOL)setVolumeTo:(float)value forCategory:(NSString *)cat;
+- (float)volumeForCategory:(NSString *)cat;
+@end
+/* SpringBoardServices — 亮度 */
+typedef void (*SBSSetBrightnessLevelWithFadeDuration_t)(float level, double fade);
+/* 动态查找一次即可缓存 */
+static SBSSetBrightnessLevelWithFadeDuration_t pSBSSetBrightnessLevelWithFadeDuration = NULL;
+/* 调节模式与全局状态 */
 typedef NS_ENUM(NSUInteger, DYEdgeMode) {
     DYEdgeModeNone       = 0,
     DYEdgeModeBrightness = 1,
