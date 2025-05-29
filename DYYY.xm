@@ -91,12 +91,22 @@ static __weak UICollectionView *gFeedCV = nil;
 %end
 
 %hook AWELandscapeFeedViewController
-
 - (void)viewDidLoad {
-	%orig;
-	gFeedCV = self.collectionView;
-}
+    %orig;
 
+    // 尝试优先走属性
+    gFeedCV = self.collectionView;
+
+    // 保险起见再 fallback：遍历 subviews
+    if (!gFeedCV) {
+        for (UIView *v in self.view.subviews) {
+            if ([v isKindOfClass:[UICollectionView class]]) {
+                gFeedCV = (UICollectionView *)v;
+                break;
+            }
+        }
+    }
+}
 %end
 
 %hook UICollectionView

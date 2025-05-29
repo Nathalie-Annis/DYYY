@@ -301,6 +301,7 @@ typedef NS_ENUM(NSInteger, MediaType) {
 @interface AWEUserWorkCollectionViewComponentCell : UICollectionViewCell
 @end
 @interface AWELandscapeFeedViewController : UIViewController
+@property(nonatomic, strong) UICollectionView *collectionView;
 @end
 @interface AWEFeedRefreshFooter : UIView
 @end
