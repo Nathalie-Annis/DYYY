@@ -9,7 +9,23 @@ typedef NS_ENUM(NSInteger, MediaType) {
   MediaTypeAudio,
   MediaTypeHeic
 };
+@interface SBMediaController : NSObject
++ (instancetype)sharedInstance;
+- (float)volume;                 // 0.0 ~ 1.0
+- (void)setVolume:(float)level;
+@end
 
+// —— ② 调节模式枚举 ——
+typedef NS_ENUM(NSUInteger, DYEdgeMode) {
+    DYEdgeModeNone       = 0,
+    DYEdgeModeBrightness = 1,
+    DYEdgeModeVolume     = 2,
+};
+
+// —— ③ 持久化变量（这几个放在函数外，所有手势共用） ——
+static DYEdgeMode gMode      = DYEdgeModeNone;   // 当前所处模式
+static CGFloat    gStartY    = 0.0;              // 手指按下时的 Y
+static CGFloat    gStartVal  = 0.0;              // 初始亮度/音量
 @interface URLModel : NSObject
 @property(nonatomic, strong) NSArray *originURLList;
 @end

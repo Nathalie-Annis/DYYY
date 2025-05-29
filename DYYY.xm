@@ -112,12 +112,69 @@ static __weak UICollectionView *gFeedCV = nil;
 %hook UICollectionView
 
 - (void)handlePan:(UIPanGestureRecognizer *)pan {
-    if (self == gFeedCV) {
-        // 👉 你的自定义逻辑（例如屏蔽、修改速度、统计埋点 …）
+
+    // ===== 0. 仅处理目标 Feed 列表，其余走系统逻辑 =====
+    if (self != gFeedCV) {
+        %orig;
+        return;
     }
-    else{
-		%orig;                         
-	}
+
+    // ===== 1. 计算触点位置 & 手势状态 =====
+    CGPoint loc   = [pan locationInView:self];
+    CGFloat w     = self.bounds.size.width;
+    CGFloat xPct  = loc.x / w;                       // 0.0 ~ 1.0 (横屏时同理)
+    UIGestureRecognizerState state = pan.state;
+
+    // ===== 2. 根据状态机处理 =====
+    if (state == UIGestureRecognizerStateBegan) {
+
+        gStartY = loc.y;
+
+        if (xPct <= 0.20) {                          // 左 20 % → 亮度
+            gMode     = DYEdgeModeBrightness;
+            gStartVal = [UIScreen mainScreen].brightness;
+
+        } else if (xPct >= 0.80) {                   // 右 20 % → 音量
+            gMode     = DYEdgeModeVolume;
+            gStartVal = [[%c(SBMediaController) sharedInstance] volume];
+
+        } else {
+            gMode = DYEdgeModeNone;                  // 中间区域
+        }
+    }
+
+    // ——（A）左右调节模式：拦截滚动，自己改值 ——
+    if (gMode != DYEdgeModeNone) {
+
+        if (state == UIGestureRecognizerStateChanged) {
+
+            // ΔY > 0 = 手指上滑
+            CGFloat delta   = (gStartY - loc.y) / self.bounds.size.height;
+            const  CGFloat kScale = 2.0;             // 调节灵敏度（拖满一屏改 ±2.0）
+            float newVal   = gStartVal + delta * kScale;
+            newVal         = fminf(fmaxf(newVal, 0.0), 1.0);   // Clamp 0-1
+
+            if (gMode == DYEdgeModeBrightness) {
+                [UIScreen mainScreen].brightness = newVal;
+            } else /* Volume */ {
+                [[%c(SBMediaController) sharedInstance] setVolume:newVal];
+            }
+
+            // 吞掉滚动：把已记录位移归零，防止内容跟着动
+            [pan setTranslation:CGPointZero inView:self];
+        }
+
+        if (state == UIGestureRecognizerStateEnded  ||
+            state == UIGestureRecognizerStateCancelled ||
+            state == UIGestureRecognizerStateFailed) {
+            gMode = DYEdgeModeNone;                  // 复位
+        }
+
+        return;   // 不调 %orig；真正吞掉左右区域手势
+    }
+
+    // ——（B）中间区域：完全走原逻辑 ——
+    %orig;
 }
 
 %end
