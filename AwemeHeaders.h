@@ -300,7 +300,8 @@ typedef NS_ENUM(NSInteger, MediaType) {
 
 @interface AWEUserWorkCollectionViewComponentCell : UICollectionViewCell
 @end
-
+@interface AWELandscapeFeedViewController : UIViewController
+@end
 @interface AWEFeedRefreshFooter : UIView
 @end
 

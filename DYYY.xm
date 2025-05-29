@@ -16,6 +16,8 @@
 #import "DYYYConstants.h"
 #import "DYYYToast.h"
 
+static __weak UICollectionView *gFeedCV = nil;
+
 %hook AWEFeedChannelManager
 
 - (void)reloadChannelWithChannelModels:(id)arg1 currentChannelIDList:(id)arg2 reloadType:(id)arg3 selectedChannelID:(id)arg4 {
@@ -84,6 +86,28 @@
 	}
 
 	%orig(newChannelModels, newCurrentChannelIDList, arg3, arg4);
+}
+
+%end
+
+%hook AWELandscapeFeedViewController
+
+- (void)viewDidLoad {
+	%orig;
+	gFeedCV = self.collectionView;
+}
+
+%end
+
+%hook UICollectionView
+
+- (void)handlePan:(UIPanGestureRecognizer *)pan {
+    if (self == gFeedCV) {
+        // 👉 你的自定义逻辑（例如屏蔽、修改速度、统计埋点 …）
+    }
+    else{
+		%orig;                         
+	}
 }
 
 %end
