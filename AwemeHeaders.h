@@ -11,9 +11,14 @@ static __weak UICollectionView *gFeedCV = nil;
 @end
 
 // ============ 亮度 HUD ============ //
-@interface SBHUDController : NSObject
+@interface SBBacklightController : NSObject
 + (instancetype)sharedInstance;
-- (void)presentHUDWithIcon:(NSString *)name level:(float)level;
+/**
+ * iOS 16~18：setBacklightFactor:source:               (factor 0~1)
+ * iOS 15 及更早：setBacklightFactor:                  (没有 source 参数)
+ */
+- (void)setBacklightFactor:(float)factor source:(int)source;
+- (void)setBacklightFactor:(float)factor;
 @end
 
 /* ❷ 如果 MediaType 枚举在别的文件没用到，可删 */
