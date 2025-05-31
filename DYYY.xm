@@ -2925,7 +2925,7 @@ static AWEIMReusableCommonCell *currentCell;
 		if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideBack"]) {
 			UIView *parent = self.superview;
 			// 父视图是AWEBaseElementView(排除用户主页返回按钮) 按钮类是AWENoxusHighlightButton(排除横屏返回按钮)
-			if ([parent isKindOfClass:%c(AWEBaseElementView) && ![self isKindOfClass:%c(AWENoxusHighlightButton)]]) {
+			if ([parent isKindOfClass:%c(AWEBaseElementView)] && ![self isKindOfClass:%c(AWENoxusHighlightButton)]) {
 				[self removeFromSuperview];
 			}
 			return;
