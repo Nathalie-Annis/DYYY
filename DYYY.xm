@@ -2922,7 +2922,7 @@ static AWEIMReusableCommonCell *currentCell;
 	}
 
 	if ([accessibilityLabel isEqualToString:@"返回"]) {
-		if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideBack"]) {
+		if ([[NSUserDefaults standardUserDefaults] boolForKey:@"DYYYHideBack"] && ![self isKindOfClass:%c(AWENoxusHighlightButton)]) {
 			UIView *parent = self.superview;
 			if ([parent isKindOfClass:%c(AWEBaseElementView)]) {
 				[self removeFromSuperview];

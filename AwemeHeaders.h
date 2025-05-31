@@ -320,6 +320,9 @@ static CGFloat gStartVal = 0.0;
 @interface AWEAwemeOfflineBottomView : UIView
 @end
 
+@interface AWENoxusHighlightButton : UIButton
+@end
+
 @interface AWEUserWorkCollectionViewComponentCell : UICollectionViewCell
 @end
 
