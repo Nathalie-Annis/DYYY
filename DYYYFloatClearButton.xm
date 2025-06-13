@@ -407,7 +407,16 @@ static void initTargetClassNames(void) {
     }
 }
 - (void)findAndHideViews:(NSArray *)classNames {
-
+	/* ---------- ① 只做一次的 Class 缓存 ---------- */
+    static dispatch_once_t onceToken;
+    static Class kLeftSideCls, kFeedContainerCls, kMiddleContainerCls, kStackViewCls;
+    dispatch_once(&onceToken, ^{
+        kLeftSideCls      = NSClassFromString(@"AWELeftSideBarEntranceView");
+        kFeedContainerCls = NSClassFromString(@"AWEFeedContainerViewController");
+        kMiddleContainerCls =
+            NSClassFromString(@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer");
+        kStackViewCls     = NSClassFromString(@"AWEElementStackView");
+    });
     for (UIWindow *window in UIApplication.sharedApplication.windows) {
         for (NSString *className in classNames) {
 
@@ -523,15 +532,6 @@ static void initTargetClassNames(void) {
 			}
 		}
 	}
-}
-+ (void)initialize {
-    if (self == [DYYYFloatClearButton class]) {
-        kLeftSideCls      = NSClassFromString(@"AWELeftSideBarEntranceView");
-        kFeedContainerCls = NSClassFromString(@"AWEFeedContainerViewController");
-        kMiddleContainerCls =
-            NSClassFromString(@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer");
-        kStackViewCls     = NSClassFromString(@"AWEElementStackView"); // 你要保护的控件
-    }
 }
 %end
 %hook AWEFeedTableViewCell
