@@ -52,6 +52,18 @@ static CGFloat DYGetGlobalAlpha(void) {
     CGFloat a = value.length ? value.floatValue : 1.0;
     return (a >= 0.0 && a <= 1.0) ? a : 1.0;
 }
+static Class kLeftSideCls;
+static Class kFeedContainerCls;
+static Class kMiddleContainerCls;
+static Class kStackViewCls;
+static inline BOOL DYViewInsideCommentPane(UIView *v) {
+    for (UIView *p = v; p; p = p.superview) {
+        if (kMiddleContainerCls && [p isKindOfClass:kMiddleContainerCls]) {
+            return YES;
+        }
+    }
+    return NO;
+}
 static void findViewsOfClassHelper(UIView *view, Class viewClass, NSMutableArray *result) {
 	if ([view isKindOfClass:viewClass]) {
 		[result addObject:view];
@@ -395,30 +407,44 @@ static void initTargetClassNames(void) {
     }
 }
 - (void)findAndHideViews:(NSArray *)classNames {
-	for (UIWindow *window in [UIApplication sharedApplication].windows) {
-		for (NSString *className in classNames) {
-			Class viewClass = NSClassFromString(className);
-			if (!viewClass)
-				continue;
-			NSMutableArray *views = [NSMutableArray array];
-			findViewsOfClassHelper(window, viewClass, views);
-			for (UIView *view in views) {
-				if ([view isKindOfClass:[UIView class]]) {
-					if ([view isKindOfClass:NSClassFromString(@"AWELeftSideBarEntranceView")]) {
-						UIViewController *controller = [self findViewController:view];
-						if (![controller isKindOfClass:NSClassFromString(@"AWEFeedContainerViewController")]) {
-							continue;
-						}
-					}
-					if ([view.superview isKindOfClass:NSClassFromString(@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer")]) {
-						continue;
-					}
-					[self.hiddenViewsList addObject:view];
-					view.alpha = 0.0;
-				}
-			}
-		}
-	}
+
+    for (UIWindow *window in UIApplication.sharedApplication.windows) {
+        for (NSString *className in classNames) {
+
+            Class viewClass = NSClassFromString(className);
+            if (!viewClass) continue;
+
+            NSMutableArray *views = [NSMutableArray array];
+            findViewsOfClassHelper(window, viewClass, views);
+
+            for (UIView *view in views) {
+
+                /* ---------- ① 先白名单过滤 ---------- */
+                // AWEElementStackView 出现在评论面板时，直接跳过
+                if (kStackViewCls && [view isKindOfClass:kStackViewCls]) {
+                    if (DYViewInsideCommentPane(view)) {
+                        continue;           // ← 不隐藏，不加入列表
+                    }
+                }
+
+                /* ---------- ② 原先的左侧栏 & 评论 superview 判断 ---------- */
+                if (kLeftSideCls && [view isKindOfClass:kLeftSideCls]) {
+                    UIViewController *ctr = [self findViewController:view];
+                    if (!(kFeedContainerCls && [ctr isKindOfClass:kFeedContainerCls])) {
+                        continue;
+                    }
+                }
+                if (kMiddleContainerCls &&
+                    [view.superview isKindOfClass:kMiddleContainerCls]) {
+                    continue;
+                }
+
+                /* ---------- ③ 默认隐藏并记录 ---------- */
+                view.alpha = 0.0;
+                [self.hiddenViewsList addObject:view];
+            }
+        }
+    }
 }
 - (void)safeResetState {
     forceResetAllUIElements();
@@ -497,6 +523,15 @@ static void initTargetClassNames(void) {
 			}
 		}
 	}
+}
++ (void)initialize {
+    if (self == [DYYYFloatClearButton class]) {
+        kLeftSideCls      = NSClassFromString(@"AWELeftSideBarEntranceView");
+        kFeedContainerCls = NSClassFromString(@"AWEFeedContainerViewController");
+        kMiddleContainerCls =
+            NSClassFromString(@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer");
+        kStackViewCls     = NSClassFromString(@"AWEElementStackView"); // 你要保护的控件
+    }
 }
 %end
 %hook AWEFeedTableViewCell
