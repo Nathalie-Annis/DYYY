@@ -410,6 +410,9 @@ static void initTargetClassNames(void) {
 							continue;
 						}
 					}
+					if ([view.superview isKindOfClass:NSClassFromString(@"AWECommentInputViewSwiftImpl.CommentInputViewMiddleContainer")]) {
+						continue;
+					}
 					[self.hiddenViewsList addObject:view];
 					view.alpha = 0.0;
 				}
